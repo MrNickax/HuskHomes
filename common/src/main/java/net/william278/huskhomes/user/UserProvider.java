@@ -54,9 +54,24 @@ public interface UserProvider {
 
     @NotNull
     default List<User> getUserList() {
+        // Create defensive copies to avoid ConcurrentModificationException
+        List<User> globalUsers = new ArrayList<>();
+        synchronized (getGlobalUserList()) {
+            getGlobalUserList().values().forEach(userList -> {
+                synchronized (userList) {
+                    globalUsers.addAll(userList);
+                }
+            });
+        }
+
+        List<OnlineUser> onlineUsers = new ArrayList<>();
+        synchronized (getOnlineUserMap()) {
+            onlineUsers.addAll(getOnlineUsers());
+        }
+
         return Stream.concat(
-                getGlobalUserList().values().stream().flatMap(Collection::stream),
-                getOnlineUsers().stream().filter(o -> !o.isVanished())
+                globalUsers.stream(),
+                onlineUsers.stream().filter(o -> !o.isVanished())
         ).distinct().sorted().toList();
     }
 

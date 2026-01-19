@@ -36,7 +36,7 @@ public class TpCommand extends Command implements TabCompletable {
 
     protected TpCommand(@NotNull HuskHomes plugin) {
         super(
-                List.of("tp", "tpo"),
+                List.of("tp", "teleport"),
                 "[<player|position>] [target]",
                 plugin
         );
@@ -207,5 +207,4 @@ public class TpCommand extends Command implements TabCompletable {
     private boolean isCoordinate(@NotNull String[] args, int index) {
         return parseCoordinateArg(args, index, 0d).isPresent();
     }
-
 }

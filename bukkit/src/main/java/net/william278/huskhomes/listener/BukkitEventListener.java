@@ -20,7 +20,9 @@
 package net.william278.huskhomes.listener;
 
 import net.william278.huskhomes.BukkitHuskHomes;
+import net.william278.huskhomes.command.TpCommand;
 import net.william278.huskhomes.config.Settings;
+import net.william278.huskhomes.user.CommandUser;
 import org.bukkit.Location;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.block.data.type.RespawnAnchor;
@@ -30,7 +32,10 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.event.server.TabCompleteEvent;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 public class BukkitEventListener extends EventListener implements Listener {
 
@@ -118,5 +123,48 @@ public class BukkitEventListener extends EventListener implements Listener {
         return (BukkitHuskHomes) super.getPlugin();
     }
 
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onTabComplete(TabCompleteEvent event) {
+        String buffer = event.getBuffer();
 
+        // Check if this is a /tp command completion
+        if (!buffer.toLowerCase().startsWith("/tp ") && !buffer.equalsIgnoreCase("/tp")
+                && !buffer.toLowerCase().startsWith("/teleport ") && !buffer.equalsIgnoreCase("/teleport")) {
+            return;
+        }
+
+        // Get the TpCommand from HuskHomes
+        TpCommand tpCommand = getPlugin().getCommand(TpCommand.class).orElse(null);
+        if (tpCommand == null) {
+            return;
+        }
+
+        // Parse the command arguments
+        String[] parts = buffer.split(" ", -1);
+        String[] args;
+
+        if (parts.length == 1) {
+            // Just "/tp" with no space yet
+            args = new String[0];
+        } else {
+            // "/tp " or "/tp arg1 arg2..."
+            args = new String[parts.length - 1];
+            System.arraycopy(parts, 1, args, 0, parts.length - 1);
+        }
+
+        // Get completions from HuskHomes TpCommand
+        try {
+            CommandUser user = event.getSender() instanceof Player p
+                    ? getPlugin().getOnlineUser(p)
+                    : getPlugin().getConsole();
+
+            List<String> completions = tpCommand.getSuggestions(user, args);
+
+            // Clear existing completions and add ours
+            event.getCompletions().clear();
+            event.getCompletions().addAll(completions);
+        } catch (Exception e) {
+            getPlugin().getLogger().warning("Error handling /tp tab completion: " + e.getMessage());
+        }
+    }
 }

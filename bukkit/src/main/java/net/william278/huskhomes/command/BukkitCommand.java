@@ -123,5 +123,4 @@ public class BukkitCommand extends org.bukkit.command.Command {
     protected static PermissionDefault getPermissionDefault(boolean isOperatorCommand) {
         return isOperatorCommand ? PermissionDefault.OP : PermissionDefault.TRUE;
     }
-
 }
